@@ -76,6 +76,16 @@ class PublicOpainShuttleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"exactly 7"):
             mod.build(modified,allow_tc1_camera_reference=True)
 
+    def test_feed_contact_url_and_no_redundant_route_url(self):
+        files,_=mod.build(self.source,allow_tc1_camera_reference=True)
+        routes=self.table(files,"routes.txt")
+        feed=self.table(files,"feed_info.txt")
+        self.assertNotIn("route_url",routes[0])
+        self.assertEqual(
+            feed[0]["feed_contact_url"],
+            "https://github.com/ColombiaTransit/gtfs-bogota-opain-shuttle/issues"
+        )
+
     def test_15_minute_whatif_not_claimed_actual(self):
         files,manifest=mod.build(self.source,allow_tc1_camera_reference=True,headway_minutes=15)
         self.assertEqual(self.table(files,"frequencies.txt")[0]["headway_secs"],"900")

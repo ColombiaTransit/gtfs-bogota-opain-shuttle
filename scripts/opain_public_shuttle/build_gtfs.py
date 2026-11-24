@@ -150,10 +150,10 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
           "stop_lat":f"{c[0]:.7f}","stop_lon":f"{c[1]:.7f}","location_type":"0"}
          for s,c in zip(stops,coordinates)])
     rows["routes.txt"] = make_csv(
-        ["route_id","agency_id","route_short_name","route_long_name","route_type","route_url"],
+        ["route_id","agency_id","route_short_name","route_long_name","route_type"],
         [{"route_id":"BOG_OPAIN_PUBLIC_SATELITE","agency_id":"OPAIN","route_short_name":"Bus Satélite",
           "route_long_name":"Bus Aeroportuario — T1, carga y T2",
-          "route_type":"3","route_url":"https://eldorado.aero/transporte/como-llegar-al-aeropuerto"}])
+          "route_type":"3"}])
     trip_columns=["route_id","service_id","trip_id","trip_headsign","direction_id"]
     if gh is not None:
         trip_columns.append("shape_id")
@@ -180,11 +180,12 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
           "end_time":hhmmss(service_end),
           "headway_secs":str(headway_minutes*60),"exact_times":"0"}])
     rows["feed_info.txt"] = make_csv(
-        ["feed_publisher_name","feed_publisher_url","feed_lang","feed_version","feed_start_date","feed_end_date"],
+        ["feed_publisher_name","feed_publisher_url","feed_lang","feed_version","feed_start_date","feed_end_date","feed_contact_url"],
         [{"feed_publisher_name":"ColombiaTransit — PRIVATE RESEARCH ONLY",
           "feed_publisher_url":"https://github.com/ColombiaTransit/gtfs-bogota-opain-shuttle",
           "feed_lang":"es","feed_version":"OPAIN_INTERNAL_PROVISIONAL_V0",
-          "feed_start_date":date_start,"feed_end_date":date_end}])
+          "feed_start_date":date_start,"feed_end_date":date_end,
+          "feed_contact_url":"https://github.com/ColombiaTransit/gtfs-bogota-opain-shuttle/issues"}])
     assert set(rows)==(set(FILES)|({"shapes.txt"} if gh is not None else set()))
     manifest={
         "publication_status":"PRIVATE_RESEARCH_ONLY_NOT_FOR_PASSENGERS",
