@@ -50,7 +50,7 @@ def make_csv(columns, rows):
 
 def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
           mean_speed_kmh=15.0, road_detour_factor=1.4, date_start="20261124",
-          date_end="20271231"):
+          date_end="20271231", graphhopper_route=None):
     if headway_minutes not in (15, 20):
         raise ValueError("Research-only headway must be either 15 or 20 minutes")
     if mean_speed_kmh <= 0 or road_detour_factor < 1:
@@ -84,21 +84,38 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
                             "lat":lat, "lon":lon,
                             "boarding_confirmed":bool(stop["physical_stop_location_reviewed"])})
         coordinates.append((lat, lon))
-    # No shapes.txt: a plausible road geometry must come from GraphHopper/OSM.
-    # Distances and segment durations below are explicit straight-line based
-    # *modelled* placeholders, not observed or route-planner journey times.
+    gh = graphhopper_route
+    if gh is not None:
+        if gh.get("profile") != "bus" or len(gh.get("legs", [])) != 7:
+            raise ValueError("Seven bus-profile GraphHopper legs are required")
+        if [r["stop_id"] for r in gh.get("stops",[])] != [s["id"] for s in stops]:
+            raise ValueError("GraphHopper stop order mismatches official OPAIN sequence")
+        if any(haversine_km(c,(a["lat"],a["lon"])) * 1000 > 1
+               for c,a in zip(coordinates,gh["stops"])):
+            raise ValueError("GraphHopper route used different stop positions")
+        if not (len(gh.get("shape_points_lon_lat",[])) >= 8
+                and len(gh.get("stop_visit_shape_dist_m",[])) == 8):
+            raise ValueError("GraphHopper route geometry/shape distances missing")
+        for i,leg in enumerate(gh["legs"]):
+            if leg["index"] != i+1 or leg["travel_seconds"] <= 0:
+                raise ValueError("Unexpected or invalid GraphHopper leg")
+        if gh.get("snap_over_100m_count",0):
+            print("WARNING: one or more provisional bus stops snapped more than 100m",flush=True)
     offsets = [0]
     legs = []
     for idx in range(len(stops)):
         nxt = (idx + 1) % len(stops)
         straight_km = haversine_km(coordinates[idx], coordinates[nxt])
-        estimated_seconds = max(60, math.ceil((straight_km * road_detour_factor / mean_speed_kmh * 3600) / 30) * 30)
+        estimated_seconds = (int(gh["legs"][idx]["travel_seconds"])
+            if gh is not None else max(60, math.ceil(
+                (straight_km * road_detour_factor / mean_speed_kmh * 3600) / 30) * 30))
         # 20-second boarding dwell at each next stop except the loop closure.
         increment = estimated_seconds + (20 if nxt != 0 else 0)
         offsets.append(offsets[-1] + increment)
         legs.append({"from":stops[idx]["id"], "to":stops[nxt]["id"],
                      "straight_line_km":round(straight_km, 4),
                      "estimated_travel_seconds":estimated_seconds,
+                     "source":"GraphHopper bus OSM road model" if gh is not None else "straight_line_model",
                      "is_observed":False})
     first_departure = seconds(source["service"]["operating_start_local"])
     service_end = seconds(source["service"]["operating_end_local"])
@@ -107,15 +124,20 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
     # One frequency-based trip pattern; last departure may arrive after midnight.
     trips = [{"route_id":"BOG_OPAIN_PUBLIC_SATELITE","service_id":"OPAIN_DAILY",
               "trip_id":"OPAIN_PUBLIC_CIRCULAR_PROVISIONAL","trip_headsign":"Bus Aeroportuario — Circuito","direction_id":"0"}]
+    if gh is not None:
+        trips[0]["shape_id"] = gh["shape_id"]
     times = []
     for idx, stop in enumerate(stops + [stops[0]]):
         seconds_since_start = offsets[idx]
-        times.append({"trip_id":trips[0]["trip_id"],
+        row={"trip_id":trips[0]["trip_id"],
                       "arrival_time":hhmmss(first_departure+seconds_since_start),
                       "departure_time":hhmmss(first_departure+seconds_since_start),
                       "stop_id":stop["id"],"stop_sequence":str(idx+1),
                       "pickup_type":"1" if idx==len(stops) else "0",
-                      "drop_off_type":"0"})
+                      "drop_off_type":"0"}
+        if gh is not None:
+            row["shape_dist_traveled"] = f"{gh['stop_visit_shape_dist_m'][idx]:.1f}"
+        times.append(row)
     rows = {}
     rows["agency.txt"] = make_csv(
         ["agency_id","agency_name","agency_url","agency_timezone","agency_lang"],
@@ -132,9 +154,21 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
         [{"route_id":"BOG_OPAIN_PUBLIC_SATELITE","agency_id":"OPAIN","route_short_name":"Bus Satélite",
           "route_long_name":"Bus Aeroportuario — T1, carga y T2",
           "route_type":"3","route_url":"https://eldorado.aero/transporte/como-llegar-al-aeropuerto"}])
-    rows["trips.txt"] = make_csv(["route_id","service_id","trip_id","trip_headsign","direction_id"],trips)
-    rows["stop_times.txt"] = make_csv(
-        ["trip_id","arrival_time","departure_time","stop_id","stop_sequence","pickup_type","drop_off_type"],times)
+    trip_columns=["route_id","service_id","trip_id","trip_headsign","direction_id"]
+    if gh is not None:
+        trip_columns.append("shape_id")
+    rows["trips.txt"] = make_csv(trip_columns,trips)
+    st_columns=["trip_id","arrival_time","departure_time","stop_id","stop_sequence","pickup_type","drop_off_type"]
+    if gh is not None:
+        st_columns.append("shape_dist_traveled")
+    rows["stop_times.txt"] = make_csv(st_columns,times)
+    if gh is not None:
+        rows["shapes.txt"] = make_csv(
+            ["shape_id","shape_pt_lat","shape_pt_lon","shape_pt_sequence","shape_dist_traveled"],
+            [{"shape_id":gh["shape_id"],"shape_pt_lat":f"{point[1]:.7f}",
+              "shape_pt_lon":f"{point[0]:.7f}","shape_pt_sequence":str(idx+1),
+              "shape_dist_traveled":f"{dist:.1f}"}
+              for idx,(point,dist) in enumerate(shape_distances(gh["shape_points_lon_lat"]))])
     rows["calendar.txt"] = make_csv(
         ["service_id","monday","tuesday","wednesday","thursday","friday","saturday","sunday","start_date","end_date"],
         [{"service_id":"OPAIN_DAILY",**{day:"1" for day in
@@ -151,7 +185,7 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
           "feed_publisher_url":"https://github.com/ColombiaTransit/gtfs-bogota-opain-shuttle",
           "feed_lang":"es","feed_version":"OPAIN_INTERNAL_PROVISIONAL_V0",
           "feed_start_date":date_start,"feed_end_date":date_end}])
-    assert set(rows)==set(FILES)
+    assert set(rows)==(set(FILES)|({"shapes.txt"} if gh is not None else set()))
     manifest={
         "publication_status":"PRIVATE_RESEARCH_ONLY_NOT_FOR_PASSENGERS",
         "not_operator_issued":True,
@@ -167,9 +201,12 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
             "average_speed_kmh":mean_speed_kmh,
             "road_detour_factor":road_detour_factor,
             "boarding_dwell_seconds":20,
-            "leg_distances_are_straight_line_approximations":True,
+            "leg_distances_are_straight_line_approximations":gh is None,
             "all_stop_to_stop_durations_are_estimates":True,
-            "shape_generated":False,
+            "runtimes_from_graphhopper_osm_bus_not_observed":gh is not None,
+            "shape_generated":gh is not None,
+            "shape_source":"GraphHopper profile=bus OSM" if gh is not None else None,
+            "graphhopper_stop_snap_over_100m_legs":gh.get("snap_over_100m_count",0) if gh is not None else None,
         },
         "estimated_loop_duration_seconds":offsets[-1],
         "positions":provisional,
@@ -179,11 +216,20 @@ def build(source, *, allow_tc1_camera_reference=False, headway_minutes=20,
             "OPAIN shared SITP platforms not independently confirmed",
             "T1 Puerta 11 MapVX bus cue assignment unverified",
             "Official 15 vs 20 min headway conflict",
-            "No verified street shape, travel times or operating timetable",
+            "GraphHopper road geometry/times are model estimates, not observed service times" if gh is not None else "No verified street shape, travel times or operating timetable",
             "Run MobilityData validator; passing syntax checks does not establish factual accuracy"
         ]
     }
     return rows, manifest
+
+
+def shape_distances(points):
+    traveled=0.0
+    for i,point in enumerate(points):
+        if i:
+            previous=points[i-1]
+            traveled+=haversine_km((previous[1],previous[0]),(point[1],point[0]))*1000
+        yield point,traveled
 
 
 def main():
@@ -194,10 +240,14 @@ def main():
     parser.add_argument("--headway-minutes",type=int,choices=(15,20),default=20)
     parser.add_argument("--start-date",default="20261124")
     parser.add_argument("--end-date",default="20271231")
+    parser.add_argument("--graphhopper-routes",type=Path,
+                        help="Seven bus legs with tested GraphHopper geometry JSON")
     args=parser.parse_args()
     source=json.loads(args.source.read_text(encoding="utf-8"))
     files,manifest=build(source,allow_tc1_camera_reference=args.allow_tc1_camera_reference,
-          headway_minutes=args.headway_minutes,date_start=args.start_date,date_end=args.end_date)
+          headway_minutes=args.headway_minutes,date_start=args.start_date,date_end=args.end_date,
+          graphhopper_route=json.loads(args.graphhopper_routes.read_text(encoding="utf-8"))
+             if args.graphhopper_routes else None)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(args.output,"w",compression=zipfile.ZIP_DEFLATED) as archive:
         for name,data in files.items():

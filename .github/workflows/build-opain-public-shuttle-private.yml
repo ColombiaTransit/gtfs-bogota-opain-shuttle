@@ -13,6 +13,7 @@ on:
     paths:
       - 'scripts/opain_public_shuttle/**'
       - 'tests/test_opain_public_shuttle.py'
+      - 'tests/test_opain_graphhopper_shape.py'
       - 'data/opain-public-shuttle/source-register.json'
       - '.github/workflows/build-opain-public-shuttle-private.yml'
   push:
@@ -20,6 +21,7 @@ on:
     paths:
       - 'scripts/opain_public_shuttle/**'
       - 'tests/test_opain_public_shuttle.py'
+      - 'tests/test_opain_graphhopper_shape.py'
       - 'data/opain-public-shuttle/source-register.json'
       - '.github/workflows/build-opain-public-shuttle-private.yml'
 
@@ -35,8 +37,25 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Test GTFS invariants and source-data safeguards
-        run: python -m unittest discover -s tests -p 'test_opain_public_shuttle.py' -v
+      - name: Test GTFS source invariants and mocked GraphHopper shapes
+        run: |
+          python -m unittest discover -s tests -p 'test_opain_public_shuttle.py' -v
+          python -m unittest discover -s tests -p 'test_opain_graphhopper_shape.py' -v
+
+      - name: Query existing private GraphHopper bus profile for 7 directed legs
+        env:
+          GRAPHHOPPER_URL: ${{ vars.GRAPHHOPPER_URL }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GRAPHHOPPER_URL" ]; then
+            echo "::error::GitHub org variable GRAPHHOPPER_URL is required"
+            exit 1
+          fi
+          echo "::add-mask::$GRAPHHOPPER_URL"
+          python scripts/opain_public_shuttle/graphhopper_bus_shape.py --allow-tc1-camera-reference \
+            --output inspection-results/opain-public-shuttle/graphhopper-bus-route.json
 
       - name: Generate internal-only prototype from seven named OPAIN stops
         env:
@@ -45,6 +64,7 @@ jobs:
           python scripts/opain_public_shuttle/build_gtfs.py \
             --allow-tc1-camera-reference \
             --headway-minutes "$HEADWAY" \
+            --graphhopper-routes inspection-results/opain-public-shuttle/graphhopper-bus-route.json \
             --output inspection-results/opain-public-shuttle/OPAIN-PUBLIC-SHUTTLE-PROVISIONAL-NOT-FOR-ROUTING.zip
           python - <<'PY'
           import json, zipfile, csv, io
@@ -54,9 +74,12 @@ jobs:
           assert manifest["publication_status"]=="PRIVATE_RESEARCH_ONLY_NOT_FOR_PASSENGERS"
           assert manifest["not_operator_issued"] and manifest["tc1_camera_is_not_boarding_pole"]
           assert manifest["stop_count"]==7
+          assert manifest["modelling_assumptions"]["shape_generated"]
+          assert manifest["modelling_assumptions"]["runtimes_from_graphhopper_osm_bus_not_observed"]
           with zipfile.ZipFile(next(root.glob("*.zip"))) as z:
             assert len(list(csv.DictReader(io.StringIO(z.read("stops.txt").decode()))))==7
-            assert "shapes.txt" not in z.namelist()
+            assert "shapes.txt" in z.namelist()
+            assert len(list(csv.DictReader(io.StringIO(z.read("shapes.txt").decode())))) > 8
             assert "pathways.txt" not in z.namelist()
           PY
 
