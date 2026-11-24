@@ -14,7 +14,6 @@ on:
       - 'scripts/opain_public_shuttle/**'
       - 'tests/test_opain_public_shuttle.py'
       - 'tests/test_opain_graphhopper_shape.py'
-      - 'tests/test_opain_graphhopper_shape.py'
       - 'data/opain-public-shuttle/source-register.json'
       - '.github/workflows/build-opain-public-shuttle-private.yml'
   push:
@@ -22,6 +21,7 @@ on:
     paths:
       - 'scripts/opain_public_shuttle/**'
       - 'tests/test_opain_public_shuttle.py'
+      - 'tests/test_opain_graphhopper_shape.py'
       - 'data/opain-public-shuttle/source-register.json'
       - '.github/workflows/build-opain-public-shuttle-private.yml'
 
