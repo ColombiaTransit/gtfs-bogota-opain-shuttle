@@ -165,9 +165,10 @@ jobs:
             echo "::error::Version $VERSION already exists; use a new version. Latest is the only movable tag."
             exit 1
           fi
-          gh release view "$VERSION" >/dev/null 2>&1 && {
-            echo "::error::Version release already exists"; exit 1;
-          } || true
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "::error::Version release already exists; refusing to overwrite versioned assets"
+            exit 1
+          fi
 
       - name: Create immutable version release, then move latest tag and update its fixed-name asset
         env:
