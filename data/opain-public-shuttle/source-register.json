@@ -1,0 +1,525 @@
+{
+  "status": "research_only_sitp_and_mapvx_provisional_stops_not_for_public_gtfs_release",
+  "as_of": "2026-11-24",
+  "scope": "OPAIN public/landside Bus Aeroportuario (Bus Satélite), NOT the airside passenger transfer shuttle or pedestrian Pathways",
+  "route": {
+    "candidate_route_id": "BOG_OPAIN_PUBLIC_SATELITE",
+    "route_type": 3,
+    "circular": true,
+    "fare": "free",
+    "operated_under": "OPAIN public airport shuttle service",
+    "actual_contracted_bus_operator": "not_independently_verified"
+  },
+  "service": {
+    "daily": true,
+    "operating_start_local": "04:00:00",
+    "operating_end_local": "24:00:00",
+    "timezone": "America/Bogota",
+    "confirmed_via": "https://eldorado.aero/transporte/como-llegar-al-aeropuerto",
+    "frequency_minutes": {
+      "currently_linked_official_stop_map": 20,
+      "OPAIN_2026_press_approximate": 15,
+      "verified_operational_headway": null
+    },
+    "frequency_conflict_pending": true,
+    "scheduled_stop_to_stop_runtime_seconds": null
+  },
+  "stop_sequence_source": "https://static.eldoradoaero.com/web/pdf/transporte/paraderos-bus-aero2.pdf",
+  "stops": [
+    {
+      "id": "BOG_OPAIN_SAT_01",
+      "sequence": 1,
+      "name_es": "Terminal 1 — Llegadas Internacionales, Puerta 2",
+      "location": "T1",
+      "lat": 4.697749,
+      "lon": -74.142048,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "MapVX",
+      "coordinate_source_kind": "named_bus_satelite_T1_catalogue_POI",
+      "coordinate_source_detail": "MapVX Bus Satélite T1 catalogue POI; corroborated by 288 identical T1→T2 bus-step origins ~0.5 m away",
+      "coordinate_status": "provisional_from_mapvx",
+      "coordinate_mapping_confidence": "medium"
+    },
+    {
+      "id": "BOG_OPAIN_SAT_02",
+      "sequence": 2,
+      "name_es": "Terminal 1 — Llegadas Nacionales, Puerta 11",
+      "location": "T1",
+      "lat": 4.69761,
+      "lon": -74.140097,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "MapVX",
+      "coordinate_source_kind": "routeplanner_bus_cue_near_T1_public_acceso_1",
+      "coordinate_source_detail": "MapVX T2→T1 bus cue ~2.4 m from Acceso 1 Nivel 1; assignment to T1 Puerta 11 is provisional and not independently verified",
+      "coordinate_status": "provisional_from_mapvx",
+      "coordinate_mapping_confidence": "low"
+    },
+    {
+      "id": "BOG_OPAIN_SAT_03",
+      "sequence": 3,
+      "name_es": "Terminal de Carga 1 (TC1)",
+      "location": "TC1",
+      "lat": null,
+      "lon": null,
+      "physical_stop_location_reviewed": false
+    },
+    {
+      "id": "BOG_OPAIN_SAT_04",
+      "sequence": 4,
+      "name_es": "Terminal de Carga 2 y 3",
+      "location": "TC2/3",
+      "lat": 4.6928494,
+      "lon": -74.1360401,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "OpenStreetMap SITP platform",
+      "coordinate_source_kind": "provisional_shared_sitp_opain_boarding_model",
+      "coordinate_source_detail": "OSM node/14202289245, SITP ref 382A06, OSM name 'CAC'. Assigned by project-owner likely-shared-SITP-stop working assumption; actual OPAIN boarding not independently observed.",
+      "coordinate_status": "provisional_from_osm_sitp",
+      "coordinate_mapping_confidence": "low_sitp_shared_boarding_hypothesis"
+    },
+    {
+      "id": "BOG_OPAIN_SAT_05",
+      "sequence": 5,
+      "name_es": "Edificio Aeronáutica Civil (NEAA)",
+      "location": "NEAA",
+      "lat": 4.690366,
+      "lon": -74.1327876,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "OpenStreetMap SITP platform",
+      "coordinate_source_kind": "provisional_shared_sitp_opain_boarding_model",
+      "coordinate_source_detail": "OSM node/6743732547, SITP ref 383A06, OSM name 'Aeronáutica Civil'. Assigned by project-owner likely-shared-SITP-stop working assumption; actual OPAIN boarding not independently observed.",
+      "coordinate_status": "provisional_from_osm_sitp",
+      "coordinate_mapping_confidence": "medium_sitp_pole_photographed_opain_unconfirmed"
+    },
+    {
+      "id": "BOG_OPAIN_SAT_06",
+      "sequence": 6,
+      "name_es": "Carrera 103 — Antigua Zona de Aviación General",
+      "location": "Carrera 103",
+      "lat": 4.6903722,
+      "lon": -74.1314057,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "OpenStreetMap SITP platform",
+      "coordinate_source_kind": "provisional_shared_sitp_opain_boarding_model",
+      "coordinate_source_detail": "OSM node/5168315104, SITP ref 194A05, OSM name 'CIAC'. Assigned by project-owner likely-shared-SITP-stop working assumption; actual OPAIN boarding not independently observed.",
+      "coordinate_status": "provisional_from_osm_sitp",
+      "coordinate_mapping_confidence": "low_sitp_shared_boarding_hypothesis"
+    },
+    {
+      "id": "BOG_OPAIN_SAT_07",
+      "sequence": 7,
+      "name_es": "Terminal 2 (Puente Aéreo)",
+      "location": "T2",
+      "lat": 4.69375,
+      "lon": -74.135236,
+      "physical_stop_location_reviewed": false,
+      "coordinate_source": "MapVX",
+      "coordinate_source_kind": "named_bus_satelite_T2_catalogue_POI",
+      "coordinate_source_detail": "MapVX Bus Satélite T2 catalogue POI; corroborated by 192 repeated nearby T2→T1 bus-route cues ~7 m away",
+      "coordinate_status": "provisional_from_mapvx",
+      "coordinate_mapping_confidence": "medium"
+    }
+  ],
+  "mapvx_research_only_public_bus_poi_candidates": [
+    {
+      "name": "Bus Satélite T1",
+      "lat": 4.697749,
+      "lon": -74.142048,
+      "source": "docs/step-11-full-route-analysis.md",
+      "verified_public_boarding_location": false,
+      "assigned_stop_id": "BOG_OPAIN_SAT_01",
+      "assignment_status": "provisional"
+    },
+    {
+      "name": "Bus Satélite T2",
+      "lat": 4.69375,
+      "lon": -74.135236,
+      "source": "docs/step-11-full-route-analysis.md",
+      "verified_public_boarding_location": false,
+      "assigned_stop_id": "BOG_OPAIN_SAT_07",
+      "assignment_status": "provisional"
+    },
+    {
+      "name": "T1 second bus cue by Acceso 1 (Nivel 1)",
+      "lat": 4.69761,
+      "lon": -74.140097,
+      "source": "docs/step-11-full-route-analysis.md",
+      "source_kind": "mapvx_route_step_bus_cue_not_named_bus_stop_POI",
+      "verified_public_boarding_location": false,
+      "assigned_stop_id": "BOG_OPAIN_SAT_02",
+      "assignment_status": "provisional_needs_puerta11_confirmation"
+    }
+  ],
+  "source_conflicts_and_notes": [
+    "Project owner decision 2026-11-24: use current OPAIN names and route sequence exclusively; treat Moovit as potentially outdated and do not substitute its naming, stop order, service calendar or headway.",
+    "Current linked map gives headway 20 minutes; May 2026 OPAIN announcement gives approximately 15 minutes; do not encode an exact vehicle schedule from either alone.",
+    "OPAIN June 2020 GOP-PR-0034 had contingent TC1 stop rules; must not assume those unchanged in 2026.",
+    "Do not replace public curbside bus boarding coordinates with terminal door/indoor POI coordinates without stop-specific verification.",
+    "Owner explicitly confirmed two distinct T1 public shuttle stops. T1 Puerta 2 and Puerta 11 retain separate GTFS stop_ids and separate provisional MapVX coordinates.",
+    "Puerta 11's MapVX source coordinate is a bus route cue near public Acceso 1, not a named Bus Satélite catalogue POI. Do not present the assigned Puerta 11 coordinate as independently verified.",
+    "The three MapVX positions are adopted as provisional source coordinates; final public GTFS stop coordinates and curbside identity still require verification.",
+    "2020 OPAIN stop #4 was CAC Centro Administrativo de Carga; 2023 and current official diagram calls #4 TC2 y 3. Preserved latest official GTFS stop name and stored CAC as a location alias/evidence, not a new eighth stop.",
+    "Older OPAIN source names (e.g., Puerta 8 or CAC) and OSM location names are historic/area context only, not replacements for present-day OPAIN stop names.",
+    "Owner working assumption 2026-11-24: OPAIN public shuttle most likely uses SITP stops. Provisional OSM SITP coordinates assigned to OPAIN stop #4 (382A06), #5 (383A06) and #6 (194A05), retaining only OPAIN canonical names and all physical_stop_location_reviewed=false.",
+    "Street View Mar 2025 confirms TC1 wording under cargo access marker 11 (owner zoom correction). This does not equate to T1 passenger Puerta 11 or confirm a Bus Satélite boarding stop."
+  ],
+  "sources": [
+    {
+      "url": "https://eldorado.aero/transporte/como-llegar-al-aeropuerto",
+      "role": "current official operating window and link to stop-map"
+    },
+    {
+      "url": "https://static.eldoradoaero.com/web/pdf/transporte/paraderos-bus-aero2.pdf",
+      "role": "current linked 7-stop official loop diagram and 20-minute headway"
+    },
+    {
+      "url": "https://eldorado.aero/comunicados/el-dorado-renueva-el-servicio-de-bus-aeroportuario-gratuito-con-vehiculos-100-electricos",
+      "role": "2026 electric bus renovation and approx 15-minute headway"
+    },
+    {
+      "url": "https://www.opain.co/archivos/gop-pr-0034-procedimientoserviciobussatliteaeropuerto.pdf",
+      "role": "historical 2020 operating procedure; not automatically applicable in 2026"
+    },
+    {
+      "path": "docs/step-11-full-route-analysis.md",
+      "role": "private existing MapVX T1/T2 satellite POI candidate locations"
+    },
+    {
+      "url": "https://github.com/ColombiaTransit/Eldorado-mapa/pull/33",
+      "role": "historical prototype PR, generator relocated here"
+    }
+  ],
+  "release_blockers": [
+    "direction and actual drivable shape",
+    "segment travel times and complete loop duration",
+    "headway conflict",
+    "TC1 contingency status",
+    "full MobilityData validator and OTP test",
+    "Six provisional MapVX/SITP coordinates available, but OPAIN use of the SITP platforms at stops 4, 5 and 6 remains unverified; no public passenger-ready GTFS",
+    "TC1 road-access reference 4.6939551,-74.1386152 is Street View camera position, not verified roadside boarding pole; GTFS TC1 lat/lon remain null"
+  ],
+  "gtfs_generated": false,
+  "ready_for_otp": false,
+  "published": false,
+  "osm_overpass_export": {
+    "osm_base_timestamp": "2026-11-24T05:44:43Z",
+    "source": "user-provided Overpass JSON export (7).json, OSM data © OpenStreetMap contributors, ODbL",
+    "bbox_south_west_north_east": [
+      4.675,
+      -74.175,
+      4.715,
+      -74.115
+    ],
+    "element_count": 4716,
+    "element_types": {
+      "node": 435,
+      "way": 4272,
+      "relation": 9
+    },
+    "bus_stop_tag_count": 273,
+    "drivable_highway_way_count": 4266,
+    "explicitly_named_opain_bus_stops": 0,
+    "explicit_bus_satelite_named_osm_route_relations": 0,
+    "terminal_bus_matches_research_only": [
+      {
+        "osm_type": "node",
+        "osm_id": 14202289243,
+        "name": "Aeropuerto Eldorado",
+        "network": "SITP",
+        "ref": "377A05",
+        "lat": 4.6976941,
+        "lon": -74.1407039,
+        "meters_from_mapvx_T1_candidate": 149,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 14252560576,
+        "name": "Aeropuerto Eldorado",
+        "network": "SITP",
+        "ref": "377B05",
+        "lat": 4.6974663,
+        "lon": -74.1403957,
+        "meters_from_mapvx_T1_candidate": 186,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 997742232,
+        "name": null,
+        "network": null,
+        "ref": null,
+        "lat": 4.6970637,
+        "lon": -74.1404717,
+        "meters_from_mapvx_T1_candidate": 191,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 14202289242,
+        "name": "Puente Aéreo",
+        "network": "SITP",
+        "ref": "383A05",
+        "lat": 4.6941776,
+        "lon": -74.1360233,
+        "meters_from_mapvx_T2_candidate": 99,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 4991432624,
+        "name": "Puente Aéreo",
+        "network": "SITP",
+        "ref": "380A05",
+        "lat": 4.69184,
+        "lon": -74.1333537,
+        "meters_from_mapvx_T2_candidate": 298,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 14202289245,
+        "name": "CAC",
+        "network": "SITP",
+        "ref": "382A06",
+        "lat": 4.6928494,
+        "lon": -74.1360401,
+        "meters_from_mapvx_T2_candidate": 134,
+        "opain_boarding_verified": false
+      },
+      {
+        "osm_type": "node",
+        "osm_id": 6743732547,
+        "name": "Aeronáutica Civil",
+        "network": "SITP",
+        "ref": "383A06",
+        "lat": 4.690366,
+        "lon": -74.1327876,
+        "opain_boarding_verified": false
+      }
+    ],
+    "cargo_areas_without_TC1_TC23_mapping": [
+      {
+        "osm_type": "way",
+        "osm_id": 24198658,
+        "name": "Terminal de Carga El Dorado",
+        "centroid_research_only": [
+          4.6936382,
+          -74.1406478
+        ]
+      },
+      {
+        "osm_type": "way",
+        "osm_id": 65866132,
+        "name": "Terminal de Carga El Dorado",
+        "centroid_research_only": [
+          4.6914485,
+          -74.1366145
+        ]
+      }
+    ],
+    "roadside_match_notes": [
+      "The two OSM cargo-building centroids are not boarding coordinates and cannot be independently mapped to TC1 versus TC2/3.",
+      "Named T1 and T2 OSM bus stops are SITP, not documented as OPAIN stops. Do not promote or merge them into OPAIN shuttle stops.txt.",
+      "Unnamed bus platform OSM node 997742232 has no OPAIN attribution either.",
+      "Aeronáutica Civil SITP platform is an area landmark, not a verified OPAIN NEAA boarding stop.",
+      "Nearest OSM road to candidate MapVX T1 bus POI ~10m (Llegadas, way 609023005); to candidate MapVX T2 POI ~1m (service road, way 1025720596). Distances merely aid road-side validation.",
+      "No independent OSM named Bus Satélite route or stop was found in this export."
+    ],
+    "physical_positions_reconciled": 0,
+    "route_geometry_released": false,
+    "mapvx_provisional_coordinate_stops": 3,
+    "next_four_stop_candidates": [
+      {
+        "stop_id": "BOG_OPAIN_SAT_03",
+        "osm_type": "way",
+        "osm_id": 24198658,
+        "lat": 4.69363818,
+        "lon": -74.14064776,
+        "osm_name": "Terminal de Carga El Dorado",
+        "candidate_kind": "building_geometry_centroid_ONLY_NOT_BOARDING_POINT",
+        "evidence": "2020 OPAIN route map places TC1 adjacent to first major cargo terminal on the approach from T1; OSM polygon's label does not independently identify it as TC1",
+        "confidence": "area_candidate",
+        "source_url": "https://www.opain.co/archivos/gop-pr-0034-procedimientoserviciobussatliteaeropuerto.pdf",
+        "boarding_point_verified": false,
+        "osm_name_is_not_opain_canonical_name": true,
+        "may_override_stop_name": false,
+        "new_streetview_research_reference": {
+          "lat": 4.6939551,
+          "lon": -74.1386152,
+          "source": "user Street View screenshot March 2025",
+          "kind": "streetview_camera_position_near_cargo_offices_and_access_11_not_bus_stop",
+          "exact_stop_confirmed": false,
+          "entrance_verified_as_TC1": true
+        }
+      },
+      {
+        "stop_id": "BOG_OPAIN_SAT_04",
+        "osm_type": "node",
+        "osm_id": 14202289245,
+        "lat": 4.6928494,
+        "lon": -74.1360401,
+        "osm_name": "CAC",
+        "osm_ref": "382A06",
+        "osm_network": "SITP",
+        "candidate_kind": "SITP_public_transport_platform_near_CAC",
+        "evidence": "Current OPAIN official stop #4: Terminal de Carga 2 y 3; older OPAIN historical schematic called this area CAC. OSM CAC node is a third-party SITP landmark, not a confirmed OPAIN boarding location.",
+        "confidence": "good_area_candidate_only",
+        "source_url": "https://www.opain.co/archivos/gop-pr-0034-procedimientoserviciobussatliteaeropuerto.pdf",
+        "boarding_point_verified": false,
+        "osm_name_is_not_opain_canonical_name": true,
+        "may_override_stop_name": false,
+        "assigned_as_provisional_coordinate": true
+      },
+      {
+        "stop_id": "BOG_OPAIN_SAT_05",
+        "osm_type": "node",
+        "osm_id": 6743732547,
+        "lat": 4.690366,
+        "lon": -74.1327876,
+        "osm_name": "Aeronáutica Civil",
+        "osm_ref": "383A06",
+        "osm_network": "SITP",
+        "candidate_kind": "SITP_public_transport_platform_near_NEAA",
+        "evidence": "Current OPAIN stop #5: Edificio Aeronáutica Civil (NEAA); OSM Aeronáutica Civil is a nearby SITP platform for area matching only.",
+        "confidence": "good_area_candidate_only",
+        "source_url": "https://storage.eldoradoaero.com/cms/pages/servicios/banners-service-transport/Rutacircular-1.pdf",
+        "boarding_point_verified": false,
+        "osm_name_is_not_opain_canonical_name": true,
+        "may_override_stop_name": false,
+        "streetview_corrob_streetview_date": "2025-03",
+        "streetview_corrob_url": "https://maps.app.goo.gl/WrfiDNMAjxPCYgFE6?g_st=ac",
+        "streetview_corrob_readable_ref": "383A06",
+        "streetview_corrob_result": "SITP 383A06 pole is visually confirmed, but no OPAIN-branded separate shuttle stop or shared boarding is confirmed",
+        "assigned_as_provisional_coordinate": true
+      },
+      {
+        "stop_id": "BOG_OPAIN_SAT_06",
+        "osm_type": "node",
+        "osm_id": 5168315104,
+        "lat": 4.6903722,
+        "lon": -74.1314057,
+        "osm_name": "CIAC",
+        "osm_ref": "194A05",
+        "osm_network": "SITP",
+        "candidate_kind": "SITP_public_transport_platform_near_Carrera_103",
+        "evidence": "OPAIN current stop #6: Carrera 103 / Antigua Zona de Aviación General. Nearby OSM SITP CIAC stop is a spatial area candidate only; name CIAC does not replace the OPAIN stop name.",
+        "confidence": "area_candidate_only",
+        "source_url": "https://static.eldoradoaero.com/web/pdf/transporte/paraderos-bus-aero2.pdf",
+        "boarding_point_verified": false,
+        "osm_name_is_not_opain_canonical_name": true,
+        "may_override_stop_name": false,
+        "new_visual_evidence": "Owner-provided Google Street View March 2025 at Ac.26 #103-43 a 103-31 shows El Dorado-branded bus 215 near Carrera 103/CISA Entrada 14; no visible identified OPAIN stop pole or boarding. Keep candidate location provisional.",
+        "assigned_as_provisional_coordinate": true
+      }
+    ],
+    "matched_neaa_and_carrera103_sitp_platforms": true,
+    "opain_boarding_point_confirmed_count": 0,
+    "sitp_candidate_stop_ids_now_provisionally_assigned": [
+      "BOG_OPAIN_SAT_04",
+      "BOG_OPAIN_SAT_05",
+      "BOG_OPAIN_SAT_06"
+    ],
+    "tc1_nearest_osm_transit_stops_note": "No documented/recognizable SITP platform beside TC1 cargo building centroid in the uploaded OSM export. Nearest transit platform node/997742232 is approximately 381 m away, toward T1, unnamed and unlinked to TC1. Do not assign it as TC1, and do not use the cargo building centroid as bus boarding coordinates.",
+    "provisional_stops_total": 6,
+    "stops_without_coordinates": [
+      "BOG_OPAIN_SAT_03"
+    ]
+  },
+  "stop_naming_policy": {
+    "canonical_authority": "OPAIN current linked official shuttle stop map",
+    "canonical_source": "https://static.eldoradoaero.com/web/pdf/transporte/paraderos-bus-aero2.pdf",
+    "use_opain_names_for_all_7_stops": true,
+    "use_current_opain_stop_sequence": true,
+    "moovit_operational_data_status": "potentially_outdated_reference_only",
+    "moovit_may_override_stop_names": false,
+    "moovit_may_override_stop_order": false,
+    "moovit_may_override_operational_schedule": false,
+    "noncanonical_osm_labels": "location-evidence-only; never overwrite name_es",
+    "gtfs_name_field": "stops[].name_es"
+  },
+  "user_supplied_streetview_evidence": [
+    {
+      "stop_id": "BOG_OPAIN_SAT_06",
+      "official_opain_name": "Carrera 103 — Antigua Zona de Aviación General",
+      "google_maps_url": "https://maps.app.goo.gl/qEp4VNHG1GvYTuNa6?g_st=ac",
+      "image_capture_date": "2025-03",
+      "observed_street_address": "Ac. 26 #103-43 a 103-31, Bogotá, Colombia",
+      "local_landmark": "PasarEx/CISA, Entrada 14 (as shown on screenshot's map and nearby visible sign)",
+      "visual_observations": [
+        "An El Dorado-branded minibus, fleet number 215, is visible on the Avenida Calle 26 carriageway",
+        "A sidewalk and curb, fenced premises and a free-standing advertising/information board are visible",
+        "No distinct clearly legible OPAIN Bus Satélite stop pole or bus-stop sign can be identified in the supplied screenshot",
+        "Bus door position, vehicle halt and passenger boarding/alighting are not visibly confirmed"
+      ],
+      "inference": "supports historical operation of an El Dorado-branded shuttle in the Carrera 103 area, not the exact street-level stop or current 2026 boarding coordinates",
+      "bus_stopping_at_exact_point_verified": false,
+      "physical_stop_location_reviewed": false,
+      "current_service_operational_status_verified_from_this_photo": false,
+      "coordinate_status": "no_new_coordinate_adopted",
+      "photo_license": "Google Street View screenshot supplied for research; do not publish image or copy it into the repository"
+    },
+    {
+      "stop_id": "BOG_OPAIN_SAT_05",
+      "official_opain_name": "Edificio Aeronáutica Civil (NEAA)",
+      "google_maps_url": "https://maps.app.goo.gl/WrfiDNMAjxPCYgFE6?g_st=ac",
+      "image_capture_date": "2025-03",
+      "observed_road_label": "10653 Ac. 26, Bogotá, Colombia (Street View UI)",
+      "visual_observations": [
+        "Clearly visible Bogotá public-bus stop pole with readable code 383A06",
+        "Blue bus symbol and multi-line service information on sign indicate a regular city-bus/SITP platform",
+        "Pole is immediately at a sidewalk/curb frontage with tactile paving and an office/building frontage",
+        "No separately identified OPAIN / Bus Satélite pole, logo or timetable is legible in this photo"
+      ],
+      "osm_reference_match": {
+        "osm_type": "node",
+        "osm_id": 6743732547,
+        "osm_name": "Aeronáutica Civil",
+        "osm_ref": "383A06",
+        "osm_network": "SITP",
+        "osm_lat": 4.690366,
+        "osm_lon": -74.1327876,
+        "exact_streetview_camera_coordinate_verified": false
+      },
+      "inference": "Confirms the existence of the separately mapped SITP pole with reference 383A06 in the Aeronáutica Civil area in March 2025. It does not establish that the OPAIN public satellite shuttle shares this pole.",
+      "opain_boarding_point_verified": false,
+      "physical_stop_location_reviewed": false,
+      "current_2026_opain_service_verified_from_photo": false,
+      "coordinate_status": "no_opain_stop_coordinate_adopted",
+      "photo_license": "Google Street View screenshot supplied for research; do not republish image in repository"
+    },
+    {
+      "stop_id": "BOG_OPAIN_SAT_03",
+      "official_opain_name": "Terminal de Carga 1 (TC1)",
+      "streetview_camera_lat": 4.6939551,
+      "streetview_camera_lon": -74.1386152,
+      "streetview_heading_degrees": 191.7,
+      "streetview_date": "2025-03",
+      "source": "User-supplied Google Street View screenshot; Google Maps address bar @4.6939551,-74.1386152, heading 191.7",
+      "observed": [
+        "Cargo offices building labelled 'OFICINAS DE CARGA'",
+        "Yellow number 11 beside entrance/fenced cargo access",
+        "Cargo zone entrance road and fenced perimeter visible",
+        "No legible OPAIN Bus Satélite stop pole and no boarding/alighting observed",
+        "TC1 explicitly printed in yellow text in the black panel beneath large access number 11 (confirmed by owner)"
+      ],
+      "interpretation": "Confirmed TC1 cargo entrance and street reference near bus-route research; bus boarding pole, actual stop kerb and exact shuttle boarding position not shown.",
+      "physical_stop_location_reviewed": false,
+      "opain_boarding_point_verified": false,
+      "google_streetview_image_republished": false,
+      "visual_confirmation": "Owner identified yellow text 'TC1' in black strip directly below large yellow access number '11'; image confirms this is a TC1 cargo entrance, rather than generic cargo-office area."
+    }
+  ],
+  "stop_geolocation_policy": {
+    "user_decision": "2026-11-24: Likely that OPAIN public shuttle shares SITP stops. Use spatially matching SITP stop positions as provisional coordinates in our internal source register.",
+    "official_name_authority": "current OPAIN official stops; never adopt SITP or Moovit stop names",
+    "sitp_shared_stop_assumption": "working_hypothesis",
+    "assign_validated_sitp_platforms_with_independent_matching_areas": true,
+    "block_unidentified_building_centroid_as_stop": true,
+    "actual_opain_boarding_verification_pending": true,
+    "two_distinct_T1_stops_preserved": true
+  },
+  "migrated_from_repository": "ColombiaTransit/Eldorado-mapa",
+  "active_repository": "ColombiaTransit/gtfs-bogota-opain-shuttle",
+  "migration_date": "2026-11-24"
+}
