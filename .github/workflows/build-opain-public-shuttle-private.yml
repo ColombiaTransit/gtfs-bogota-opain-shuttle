@@ -1,0 +1,117 @@
+name: Build PRIVATE OPAIN public Bus Satelite GTFS research preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      headway_minutes:
+        description: "Unconfirmed research scenario: 20 minutes (official map) or 15 (2026 announcement)"
+        required: true
+        default: '20'
+        type: choice
+        options: ['20', '15']
+  pull_request:
+    paths:
+      - 'scripts/opain_public_shuttle/**'
+      - 'tests/test_opain_public_shuttle.py'
+      - 'data/opain-public-shuttle/source-register.json'
+      - '.github/workflows/build-opain-public-shuttle-private.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/opain_public_shuttle/**'
+      - 'tests/test_opain_public_shuttle.py'
+      - 'data/opain-public-shuttle/source-register.json'
+      - '.github/workflows/build-opain-public-shuttle-private.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-private-gtfs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test GTFS invariants and source-data safeguards
+        run: python -m unittest discover -s tests -p 'test_opain_public_shuttle.py' -v
+
+      - name: Generate internal-only prototype from seven named OPAIN stops
+        env:
+          HEADWAY: ${{ inputs.headway_minutes || '20' }}
+        run: |
+          python scripts/opain_public_shuttle/build_gtfs.py \
+            --allow-tc1-camera-reference \
+            --headway-minutes "$HEADWAY" \
+            --output inspection-results/opain-public-shuttle/OPAIN-PUBLIC-SHUTTLE-PROVISIONAL-NOT-FOR-ROUTING.zip
+          python - <<'PY'
+          import json, zipfile, csv, io
+          from pathlib import Path
+          root=Path("inspection-results/opain-public-shuttle")
+          manifest=json.loads(next(root.glob("*.manifest.json")).read_text())
+          assert manifest["publication_status"]=="PRIVATE_RESEARCH_ONLY_NOT_FOR_PASSENGERS"
+          assert manifest["not_operator_issued"] and manifest["tc1_camera_is_not_boarding_pole"]
+          assert manifest["stop_count"]==7
+          with zipfile.ZipFile(next(root.glob("*.zip"))) as z:
+            assert len(list(csv.DictReader(io.StringIO(z.read("stops.txt").decode()))))==7
+            assert "shapes.txt" not in z.namelist()
+            assert "pathways.txt" not in z.namelist()
+          PY
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download latest tagged MobilityData CLI validator
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 https://api.github.com/repos/MobilityData/gtfs-validator/releases/latest > /tmp/validator-release.json
+          python - <<'PY'
+          import json,urllib.request
+          a=json.load(open('/tmp/validator-release.json'))['assets']
+          jar=next((r for r in a if r['name'].endswith('-cli.jar')),None)
+          if not jar:
+              raise SystemExit('No -cli.jar asset in latest published validator release')
+          print('Selected MobilityData validator:',jar['name'])
+          urllib.request.urlretrieve(jar['browser_download_url'],'/tmp/gtfs-validator-cli.jar')
+          PY
+
+      - name: Validate research-only GTFS with MobilityData
+        run: |
+          set -euo pipefail
+          mkdir -p inspection-results/opain-public-shuttle/validator
+          java -Xmx2g -jar /tmp/gtfs-validator-cli.jar \
+            -i inspection-results/opain-public-shuttle/OPAIN-PUBLIC-SHUTTLE-PROVISIONAL-NOT-FOR-ROUTING.zip \
+            -o inspection-results/opain-public-shuttle/validator \
+            -c co --skip_validator_update
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('inspection-results/opain-public-shuttle/validator/report.json')
+          if not p.exists(): raise SystemExit('Missing MobilityData validator report.json')
+          d=json.loads(p.read_text())
+          summary=d.get('summary',{})
+          notices=d.get('notices',[])
+          severity_totals={}
+          for notice in notices:
+              sev=str(notice.get('severity','UNKNOWN')).upper()
+              severity_totals[sev]=severity_totals.get(sev,0)+int(notice.get('totalNotices',len(notice.get('sampleNotices',[])) or 1))
+          print('MobilityData feed counts:',json.dumps(summary.get('counts',{})))
+          print('MobilityData notice groups:',[(n.get('code'),n.get('severity'),n.get('totalNotices')) for n in notices])
+          print('MobilityData notice totals:',severity_totals)
+          if severity_totals.get('ERROR',0)>0:
+              raise SystemExit('MobilityData ERROR notices: internal prototype fails structural GTFS validation')
+          # A validator run does not authorize public release or validate actual boarding positions.
+          assert Path('inspection-results/opain-public-shuttle/OPAIN-PUBLIC-SHUTTLE-PROVISIONAL-NOT-FOR-ROUTING.manifest.json').exists()
+          PY
+
+      - name: Archive private prototype ZIP and evidence (no GitHub release)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opain-public-shuttle-INTERNAL-PROVISIONAL-NOT-FOR-ROUTING
+          path: inspection-results/opain-public-shuttle/
+          retention-days: 7
+          if-no-files-found: warn
