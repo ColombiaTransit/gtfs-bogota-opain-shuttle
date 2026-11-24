@@ -1,0 +1,237 @@
+name: Release OPAIN public shuttle GTFS (version + latest)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Immutable version tag (e.g. v0.1.0-preview.1 or v1.0.0)"
+        required: true
+        type: string
+      channel:
+        description: "preview is provisional and prerelease; stable requires fully verified sources"
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - stable
+      headway_minutes:
+        description: "Research headway scenario (not independently verified until confirmed)"
+        required: true
+        default: '20'
+        type: choice
+        options: ['20', '15']
+      confirmation:
+        description: "Type PUBLISH_PROVISIONAL (preview) or PUBLISH_VERIFIED (stable)"
+        required: true
+        type: string
+  pull_request:
+    paths:
+      - '.github/workflows/release-opain-gtfs.yml'
+      - 'scripts/opain_public_shuttle/release_checks.py'
+      - 'tests/test_opain_release.py'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: opain-release-latest
+  cancel-in-progress: false
+
+env:
+  ZIP_NAME: gtfs-bogota-opain-shuttle.zip
+  OUTPUT_DIR: build/opain-release
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run regression tests, including release naming and evidence gates
+        run: |
+          python -m unittest discover -s tests -p 'test_opain_public_shuttle.py' -v
+          python -m unittest discover -s tests -p 'test_opain_graphhopper_shape.py' -v
+          python -m unittest discover -s tests -p 'test_opain_release.py' -v
+
+      - name: Validate manual inputs and prevent unsafe stable publication
+        env:
+          VERSION: ${{ inputs.version }}
+          CHANNEL: ${{ inputs.channel }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            test "${{ github.ref }}" = refs/heads/main || {
+              echo "::error::Release workflow must run on main"; exit 1;
+            }
+            python scripts/opain_public_shuttle/release_checks.py inputs \
+              --version "$VERSION" --channel "$CHANNEL" --confirmation "$CONFIRMATION"
+          else
+            echo "PR validation only: publishing is disabled"
+          fi
+
+      - name: Generate direction-correct GraphHopper bus shape
+        env:
+          GRAPHHOPPER_URL: ${{ vars.GRAPHHOPPER_URL }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$GRAPHHOPPER_URL" || { echo "::error::Organization variable GRAPHHOPPER_URL is missing"; exit 1; }
+          echo "::add-mask::$GRAPHHOPPER_URL"
+          mkdir -p "$OUTPUT_DIR"
+          python scripts/opain_public_shuttle/graphhopper_bus_shape.py \
+            --allow-tc1-camera-reference --output "$OUTPUT_DIR/graphhopper-bus-route.json"
+
+      - name: Build fixed-name GTFS zip
+        env:
+          HEADWAY: ${{ inputs.headway_minutes || '20' }}
+        run: |
+          python scripts/opain_public_shuttle/build_gtfs.py \
+            --allow-tc1-camera-reference \
+            --headway-minutes "$HEADWAY" \
+            --graphhopper-routes "$OUTPUT_DIR/graphhopper-bus-route.json" \
+            --output "$OUTPUT_DIR/$ZIP_NAME"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Fetch official MobilityData GTFS validator CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 3 https://api.github.com/repos/MobilityData/gtfs-validator/releases/latest > /tmp/opain-validator-release.json
+          python - <<'PY'
+          import json, urllib.request
+          assets=json.load(open('/tmp/opain-validator-release.json'))['assets']
+          cli=next((item for item in assets if item['name'].endswith('-cli.jar')),None)
+          if cli is None: raise SystemExit('No MobilityData CLI jar found in latest release')
+          urllib.request.urlretrieve(cli['browser_download_url'],'/tmp/opain-validator-cli.jar')
+          PY
+
+      - name: MobilityData validation (all ERROR notices block publication)
+        run: |
+          mkdir -p "$OUTPUT_DIR/validator"
+          java -Xmx2g -jar /tmp/opain-validator-cli.jar \
+            -i "$OUTPUT_DIR/$ZIP_NAME" -o "$OUTPUT_DIR/validator" -c co --skip_validator_update
+          python scripts/opain_public_shuttle/release_checks.py validate \
+            --zip "$OUTPUT_DIR/$ZIP_NAME" \
+            --manifest "$OUTPUT_DIR/gtfs-bogota-opain-shuttle.manifest.json" \
+            --report "$OUTPUT_DIR/validator/report.json" \
+            --source data/opain-public-shuttle/source-register.json \
+            --channel "${{ inputs.channel || 'preview' }}"
+
+      - name: Archive review build and validation report (never a release from PR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: opain-release-candidate-qa
+          path: |
+            build/opain-release/gtfs-bogota-opain-shuttle.zip
+            build/opain-release/gtfs-bogota-opain-shuttle.manifest.json
+            build/opain-release/validator/report.json
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: gtfs-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: opain-release-candidate-qa
+          path: build/opain-release
+      - name: Keep immutable version tags immutable
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          if git show-ref --tags --verify --quiet "refs/tags/$VERSION"; then
+            echo "::error::Version $VERSION already exists; use a new version. Latest is the only movable tag."
+            exit 1
+          fi
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "::error::Version release already exists; refusing to overwrite versioned assets"
+            exit 1
+          fi
+
+      - name: Create immutable version release, then move latest tag and update its fixed-name asset
+        env:
+          VERSION: ${{ inputs.version }}
+          CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ZIP="$OUTPUT_DIR/$ZIP_NAME"
+          MANIFEST="$OUTPUT_DIR/gtfs-bogota-opain-shuttle.manifest.json"
+          test -s "$ZIP" && test -s "$MANIFEST"
+          COMMIT="$(git rev-parse HEAD)"
+          NOTES="$RUNNER_TEMP/opain-release-notes.md"
+          {
+            echo "OPAIN public Bus Aeroportuario GTFS • $VERSION"
+            echo ""
+            if [ "$CHANNEL" = preview ]; then
+              echo "**PROVISIONAL RESEARCH FEED — NOT AN OFFICIAL PASSENGER TIMETABLE.**"
+              echo ""
+              echo "TC1 uses the March 2025 Street View camera reference, several boarding positions are unverified, and headway and road-model travel times are assumptions."
+            else
+              echo "Verified release, with the evidence and validation checks required by the release gate."
+            fi
+            echo ""
+            echo "Fixed GTFS filename: \`$ZIP_NAME\`"
+            echo "Road shape: GraphHopper (bus profile / OpenStreetMap)."
+            echo "Version tag: \`$VERSION\`; floating alias: \`latest\`."
+            echo "Source commit: \`$COMMIT\`."
+          } > "$NOTES"
+          if [ "$CHANNEL" = preview ]; then
+            gh release create "$VERSION" "$ZIP" "$MANIFEST" \
+              --target "$COMMIT" --title "$VERSION (PROVISIONAL GTFS)" \
+              --notes-file "$NOTES" --prerelease --latest=false
+          else
+            gh release create "$VERSION" "$ZIP" "$MANIFEST" \
+              --target "$COMMIT" --title "$VERSION" \
+              --notes-file "$NOTES" --latest=false
+          fi
+
+          # Only latest is mutable. Avoid moving it before the version release
+          # and its assets have been successfully uploaded.
+          git tag -f latest "$COMMIT"
+          git push origin +refs/tags/latest:refs/tags/latest
+
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "$ZIP" "$MANIFEST" --clobber
+            if [ "$CHANNEL" = preview ]; then
+              gh release edit latest --title "latest ($VERSION, PROVISIONAL GTFS)" \
+                --notes-file "$NOTES" --prerelease
+            else
+              gh release edit latest --title "latest ($VERSION)" \
+                --notes-file "$NOTES" --prerelease=false --latest
+            fi
+          else
+            if [ "$CHANNEL" = preview ]; then
+              gh release create latest "$ZIP" "$MANIFEST" \
+                --verify-tag --title "latest ($VERSION, PROVISIONAL GTFS)" \
+                --notes-file "$NOTES" --prerelease
+            else
+              gh release create latest "$ZIP" "$MANIFEST" \
+                --verify-tag --title "latest ($VERSION)" \
+                --notes-file "$NOTES" --latest
+            fi
+          fi
+          echo "Version download: https://github.com/$GH_REPO/releases/download/$VERSION/$ZIP_NAME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stable latest download: https://github.com/$GH_REPO/releases/download/latest/$ZIP_NAME" >> "$GITHUB_STEP_SUMMARY"
