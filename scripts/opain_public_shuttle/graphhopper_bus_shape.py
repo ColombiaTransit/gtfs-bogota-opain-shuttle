@@ -122,10 +122,11 @@ def compile_routes(stops, coords, responses):
         vertices=leg["coordinates"]
         if full:
             gap=haversine_km((full[-1][1],full[-1][0]),(vertices[0][1],vertices[0][0]))*1000
-            if gap>30:
+            if gap>5:
                 raise ValueError(f"Disconnected road geometry at stop {i+1}: gap {gap:.1f}m")
-            if gap<=2:
-                vertices=vertices[1:]
+            # Stop-side snaps from consecutive queries must join on the same
+            # directed road. Do not add a straight chord between legs.
+            vertices=vertices[1:]
         for v in vertices:
             if full:
                 cumdist+=haversine_km((full[-1][1],full[-1][0]),(v[1],v[0]))*1000
